@@ -1,0 +1,106 @@
+import math
+from collections import Counter
+
+# 1. A small labelled flower dataset.
+# Each row contains:
+# [sepal length, sepal width, petal length, petal width, flower class]
+# Measurements are in centimetres.
+dataset = [
+    [5.1, 3.5, 1.4, 0.2, "setosa"],
+    [4.9, 3.0, 1.4, 0.2, "setosa"],
+    [4.7, 3.2, 1.3, 0.2, "setosa"],
+    [5.0, 3.6, 1.4, 0.2, "setosa"],
+    [5.4, 3.9, 1.7, 0.4, "setosa"],
+    [5.5, 2.3, 4.0, 1.3, "versicolor"],
+    [6.5, 2.8, 4.6, 1.5, "versicolor"],
+    [5.7, 2.8, 4.5, 1.3, "versicolor"],
+    [6.0, 2.9, 4.5, 1.5, "versicolor"],
+    [6.1, 2.8, 4.0, 1.3, "versicolor"],
+    [6.3, 3.3, 6.0, 2.5, "virginica"],
+    [5.8, 2.7, 5.1, 1.9, "virginica"],
+    [7.1, 3.0, 5.9, 2.1, "virginica"],
+    [6.5, 3.0, 5.8, 2.2, "virginica"],
+    [6.7, 3.1, 5.6, 2.4, "virginica"]
+]
+
+feature_names = [
+    "Sepal length", "Sepal width",
+    "Petal length", "Petal width"
+]
+
+# 2. Understand the dataset
+print("DATASET INFORMATION")
+print("Number of samples:", len(dataset))
+print("Features:", feature_names)
+print("Classes: setosa, versicolor, virginica")
+
+# 3. Split data into training and testing sets.
+# The first 4 examples of each class are for training.
+# The last example of each class is for testing.
+training_data = []
+testing_data = []
+
+class_counts = {}
+for row in dataset:
+    flower_class = row[4]
+    class_counts[flower_class] = class_counts.get(flower_class, 0) + 1
+    if class_counts[flower_class] <= 4:
+        training_data.append(row)
+    else:
+        testing_data.append(row)
+
+print("\nDATA SPLIT")
+print("Training samples:", len(training_data))
+print("Testing samples:", len(testing_data))
+
+# 4. Calculate the Euclidean distance between two flowers.
+def calculate_distance(flower_a, flower_b):
+    total = 0
+    for i in range(4):
+        total += (flower_a[i] - flower_b[i]) ** 2
+    return math.sqrt(total)
+
+# 5. KNN classification function.
+def predict_flower(new_flower, training_data, k=3):
+    distances = []
+
+    for row in training_data:
+        distance = calculate_distance(new_flower, row)
+        distances.append((distance, row[4]))
+
+    distances.sort(key=lambda item: item[0])
+    nearest_neighbours = distances[:k]
+
+    classes = [item[1] for item in nearest_neighbours]
+    most_common = Counter(classes).most_common(1)
+    return most_common[0][0]
+
+# 6. Test the model.
+correct_predictions = 0
+total_predictions = len(testing_data)
+
+print("\nTEST PREDICTIONS")
+for row in testing_data:
+    actual_class = row[4]
+    predicted_class = predict_flower(row[:4], training_data, k=3)
+
+    print("Actual:", actual_class, "| Predicted:", predicted_class)
+
+    if actual_class == predicted_class:
+        correct_predictions += 1
+
+# 7. Evaluate model accuracy.
+accuracy = (correct_predictions / total_predictions) * 100
+
+print("\nMODEL EVALUATION")
+print("Correct predictions:", correct_predictions)
+print("Total test samples:", total_predictions)
+print("Accuracy:", round(accuracy, 2), "%")
+
+# 8. Predict a new flower.
+new_flower = [5.1, 3.5, 1.4, 0.2]
+prediction = predict_flower(new_flower, training_data, k=3)
+
+print("\nNEW FLOWER PREDICTION")
+print("Measurements:", new_flower)
+print("Predicted flower class:", prediction)
